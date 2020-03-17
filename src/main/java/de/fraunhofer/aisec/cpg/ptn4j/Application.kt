@@ -5,6 +5,7 @@ import de.fraunhofer.aisec.cpg.TranslationManager
 import de.fraunhofer.aisec.cpg.TranslationResult
 import de.fraunhofer.aisec.cpg.graph.Node
 import de.fraunhofer.aisec.cpg.helpers.SubgraphWalker
+import org.neo4j.driver.exceptions.AuthenticationException
 import org.neo4j.ogm.config.Configuration
 import org.neo4j.ogm.exception.ConnectionException
 import org.neo4j.ogm.session.Session
@@ -13,6 +14,7 @@ import java.io.File
 import java.net.ConnectException
 import java.nio.file.Paths
 import java.util.*
+import kotlin.system.exitProcess
 
 object Application {
     private const val TIME_BETWEEN_CONNECTION_TRIES = 2000
@@ -23,6 +25,7 @@ object Application {
     private const val NEO4J_USERNAME = "neo4j"
     private const val NEO4J_PASSWORD = "neo4j"
     private const val START_DOCKER = false
+    private const val PURGE_DB = true
 
     /**
      * Pushes the whole translationResult to the neo4j db.
@@ -38,6 +41,7 @@ object Application {
         Objects.requireNonNull(translationResult)
         val sessions = connect()
         val session = sessions.getT()
+        if (PURGE_DB) session.purgeDatabase()
         session.beginTransaction().use { transaction ->
             pushNodes(translationResult, session)
             transaction.commit()
@@ -77,6 +81,9 @@ object Application {
                                 + "ensure the database is running and that "
                                 + "there is a working network connection to it.")
                 Thread.sleep(TIME_BETWEEN_CONNECTION_TRIES.toLong())
+            } catch (ex: AuthenticationException) {
+                System.err.println("Unable to connect to localhost:7687, wrong username/password!")
+                exitProcess(1)
             }
         }
         assert(fails <= MAX_COUNT_OF_FAILS)
@@ -133,9 +140,9 @@ object Application {
         for (index in args.indices) {
             val path = Paths.get(args[index]).toAbsolutePath().normalize()
             val file = File(path.toString())
-            require(!(!file.exists() || file.isDirectory || file.isHidden)) { "Please use a correct path. It was: $path" }
+            require(!(!file.exists() || file.isHidden)) { "Please use a correct path. It was: $path" }
             if (topLevel == null) {
-                topLevel = file.parentFile
+                topLevel = if (file.isDirectory) file else file.parentFile
             } else {
                 require(topLevel.toString() == file.parentFile.toString()) { "All files should have the same top level path." }
             }
