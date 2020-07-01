@@ -23,7 +23,7 @@ object Application {
     private const val AUTO_INDEX = "none"
     private const val VERIFY_CONNECTION = true
     private const val NEO4J_USERNAME = "neo4j"
-    private const val NEO4J_PASSWORD = "neo4j"
+    private const val NEO4J_PASSWORD = "password"
     private const val START_DOCKER = false
     private const val PURGE_DB = true
 

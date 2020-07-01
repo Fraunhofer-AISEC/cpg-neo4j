@@ -9,7 +9,17 @@ plugins {
     id("org.sonarqube") version "2.8"
     id("com.diffplug.gradle.spotless") version "3.27.1"
     id("net.researchgate.release") version "2.6.0"
+    id("com.palantir.graal") version "0.7.1"
+
     kotlin("jvm") version "1.3.61"
+}
+
+graal {
+    javaVersion("11")
+    outputName("cpg-vis-neo4j")
+    mainClass("de.fraunhofer.aisec.cpg.ptn4j.Application")
+    //option("--initialize-at-build-time=org.eclipse.cdt.internal.core,org.eclipse.cdt.core.parser.util.CharArrayUtils,org.eclipse.core.runtime.PlatformObject,org.eclipse.cdt.core.dom.ast.ASTVisitor,org.eclipse.cdt.core.dom.ast.ASTTypeUtil,org.eclipse.cdt.core.dom.ast.ASTTypeUtil$1")
+    option("--initialize-at-build-time=org.eclipse")
 }
 
 application {
