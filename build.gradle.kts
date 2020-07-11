@@ -18,8 +18,18 @@ graal {
     javaVersion("11")
     outputName("cpg-vis-neo4j")
     mainClass("de.fraunhofer.aisec.cpg.ptn4j.Application")
-    //option("--initialize-at-build-time=org.eclipse.cdt.internal.core,org.eclipse.cdt.core.parser.util.CharArrayUtils,org.eclipse.core.runtime.PlatformObject,org.eclipse.cdt.core.dom.ast.ASTVisitor,org.eclipse.cdt.core.dom.ast.ASTTypeUtil,org.eclipse.cdt.core.dom.ast.ASTTypeUtil$1")
     option("--initialize-at-build-time=org.eclipse")
+    option("--initialize-at-run-time=org.eclipse.cdt.internal.core.resources.ResourceLookup")
+    option("--initialize-at-build-time=org.osgi.framework.Version")
+    option("--no-fallback")
+    option("--allow-incomplete-classpath") // need to get rid of that in the future
+    option("--report-unsupported-elements-at-runtime") // need to get rid of that in the future
+
+    // the following classes seem to be missing
+    // org.eclipse.core.resources.IResource
+    // org.eclipse.core.resources.IFile
+    // org.eclipse.core.filesystem.URIUtil.
+    // org.eclipse.core.filesystem.EFS
 }
 
 application {
@@ -44,6 +54,7 @@ val mavenCentralUri: String
     }
 
 repositories {
+    mavenLocal()
     mavenCentral()
 
     ivy {
@@ -92,6 +103,8 @@ val versions = mapOf(
 dependencies {
     // CPG
     api("de.fraunhofer.aisec", "cpg", versions["cpg"])
+
+    implementation("org.eclipse.platform:org.eclipse.core.resources:3.13.700")
 
     // neo4j
     api("org.neo4j", "neo4j-ogm-core", versions["neo4j-ogm-old"])
