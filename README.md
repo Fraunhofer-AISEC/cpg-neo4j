@@ -7,7 +7,7 @@ A simple tool to export a *code property graph* to a neo4j database.
 Build using Gradle
 
 ```
-./gradlew installDist
+./gradlew nativeImage
 ```
 
 ## Usage

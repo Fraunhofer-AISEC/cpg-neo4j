@@ -17,19 +17,8 @@ plugins {
 graal {
     javaVersion("11")
     outputName("cpg-vis-neo4j")
+    graalVersion("20.1.0")
     mainClass("de.fraunhofer.aisec.cpg.ptn4j.Application")
-    option("--initialize-at-build-time=org.eclipse")
-    option("--initialize-at-run-time=org.eclipse.cdt.internal.core.resources.ResourceLookup")
-    option("--initialize-at-build-time=org.osgi.framework.Version")
-    option("--no-fallback")
-    option("--allow-incomplete-classpath") // need to get rid of that in the future
-    option("--report-unsupported-elements-at-runtime") // need to get rid of that in the future
-
-    // the following classes seem to be missing
-    // org.eclipse.core.resources.IResource
-    // org.eclipse.core.resources.IFile
-    // org.eclipse.core.filesystem.URIUtil.
-    // org.eclipse.core.filesystem.EFS
 }
 
 application {
@@ -58,7 +47,7 @@ repositories {
     mavenCentral()
 
     ivy {
-        setUrl("https://download.eclipse.org/tools/cdt/releases/9.10/cdt-9.10.0/plugins")
+        setUrl("https://download.eclipse.org/tools/cdt/releases/9.11/cdt-9.11.1/plugins")
         metadataSources {
             artifact()
         }
@@ -96,7 +85,7 @@ val versions = mapOf(
         "neo4j-ogm" to "4.0.0",
         "neo4j-ogm-old" to "3.2.8",
         "junit5" to "5.6.0",
-        "cpg" to "2.0.1",
+        "cpg" to "2.1.1",
         "docker" to "3.0.14"
 )
 
@@ -123,10 +112,10 @@ dependencies {
 
 val compileKotlin: KotlinCompile by tasks
 compileKotlin.kotlinOptions {
-    jvmTarget = "1.8"
+    jvmTarget = "11"
 }
 
 val compileTestKotlin: KotlinCompile by tasks
 compileTestKotlin.kotlinOptions {
-    jvmTarget = "1.8"
+    jvmTarget = "11"
 }
