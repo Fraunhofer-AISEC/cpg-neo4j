@@ -75,7 +75,7 @@ val versions = mapOf(
         "neo4j-ogm" to "4.0.0",
         "neo4j-ogm-old" to "3.2.8",
         "junit5" to "5.6.0",
-        "cpg" to "2.2.0",
+        "cpg" to "2.2.1",
         "docker" to "3.0.14"
 )
 
