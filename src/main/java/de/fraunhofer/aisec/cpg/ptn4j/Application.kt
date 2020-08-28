@@ -106,7 +106,7 @@ object Application {
         val nodes: Set<Node> = HashSet<Node>(translationUnitDeclarations)
         for (elem in nodes) {
             for (child in SubgraphWalker.flattenAST(elem)) {
-                session.save(child, 1)
+                session.save(child)
             }
         }
     }
