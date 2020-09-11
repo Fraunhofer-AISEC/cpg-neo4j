@@ -36,10 +36,10 @@ class Application : Callable<Int> {
     private var files = arrayOf(".")
 
     @CommandLine.Option(names = ["--user"], description = ["Neo4j user name (default: ${DEFAULT-VALUE})"])
-    private var neo4j_username: String = "neo4j"
+    private var neo4jUsername: String = "neo4j"
 
     @CommandLine.Option(names = ["--password"], description = ["Neo4j password (default: ${DEFAULT-VALUE})"])
-    private var neo4j_password: String = "neo4j"
+    private var neo4jPassword: String = "neo4j"
 
     @CommandLine.Option(
         names = ["--load-includes"],
@@ -90,7 +90,7 @@ class Application : Callable<Int> {
                 val configuration = Configuration.Builder()
                         .uri(URI)
                         .autoIndex(AUTO_INDEX)
-                        .credentials(neo4j_username, neo4j_password)
+                        .credentials(neo4jUsername, neo4jPassword)
                         .verifyConnection(VERIFY_CONNECTION)
                         .build()
                 sessionFactory = SessionFactory(configuration, "de.fraunhofer.aisec.cpg.graph")
@@ -154,8 +154,9 @@ class Application : Callable<Int> {
      */
     @Throws(Exception::class, ConnectException::class, IllegalArgumentException::class)
     override fun call(): Int? {
-        val files_ = arrayOfNulls<File>(files.size)
+        val filePaths = arrayOfNulls<File>(files.size)
         var topLevel: File? = null
+        
         for (index in files.indices) {
             val path = Paths.get(files[index]).toAbsolutePath().normalize()
             val file = File(path.toString())
@@ -165,7 +166,7 @@ class Application : Callable<Int> {
             } else {
                 require(topLevel.toString() == file.parentFile.toString()) { "All files should have the same top level path." }
             }
-            files_[index] = file
+            filePaths[index] = file
         }
 
         if (START_DOCKER) {
@@ -174,7 +175,7 @@ class Application : Callable<Int> {
         }
 
         val translationConfiguration = TranslationConfiguration.builder()
-                .sourceLocations(*files_)
+                .sourceLocations(*filePaths)
                 .topLevel(topLevel!!)
                 .defaultPasses()
                 .loadIncludes(loadIncludes)
