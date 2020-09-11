@@ -13,7 +13,7 @@ plugins {
 }
 
 application {
-    mainClassName = "de.fraunhofer.aisec.cpg.ptn4j.Application"
+    mainClassName = "de.fraunhofer.aisec.cpg.ptn4j.ApplicationKt"
 }
 
 tasks.jacocoTestReport {
