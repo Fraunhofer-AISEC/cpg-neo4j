@@ -10,22 +10,45 @@ import org.neo4j.ogm.config.Configuration
 import org.neo4j.ogm.exception.ConnectionException
 import org.neo4j.ogm.session.Session
 import org.neo4j.ogm.session.SessionFactory
+import picocli.CommandLine
 import java.io.File
+import java.io.InputStream
 import java.net.ConnectException
 import java.nio.file.Paths
 import java.util.*
+import java.util.concurrent.Callable;
 import kotlin.system.exitProcess
 
-object Application {
-    private const val TIME_BETWEEN_CONNECTION_TRIES = 2000
-    private const val MAX_COUNT_OF_FAILS = 10
-    private const val URI = "bolt://localhost"
-    private const val AUTO_INDEX = "none"
-    private const val VERIFY_CONNECTION = true
-    private const val NEO4J_USERNAME = "neo4j"
-    private const val NEO4J_PASSWORD = "neo4j"
-    private const val START_DOCKER = false
-    private const val PURGE_DB = true
+private const val TIME_BETWEEN_CONNECTION_TRIES = 2000
+private const val MAX_COUNT_OF_FAILS = 10
+private const val URI = "bolt://localhost"
+private const val AUTO_INDEX = "none"
+private const val VERIFY_CONNECTION = true
+private const val START_DOCKER = false
+private const val PURGE_DB = true
+
+class Application : Callable<Int> {
+
+    @CommandLine.Parameters(
+    arity = "1..*",
+    description = ["The paths to analyze. If module support is enabled, the paths will be looked at if they contain modules"]
+    )
+    private var files = arrayOf(".")
+
+    @CommandLine.Option(names = ["--user"], description = ["Neo4j user name (default: ${DEFAULT-VALUE})"])
+    private var neo4jUsername: String = "neo4j"
+
+    @CommandLine.Option(names = ["--password"], description = ["Neo4j password (default: ${DEFAULT-VALUE})"])
+    private var neo4jPassword: String = "neo4j"
+
+    @CommandLine.Option(
+        names = ["--load-includes"],
+        description = ["Enable TranslationConfiguration option loadIncludes"]
+    )
+    private var loadIncludes: Boolean = false
+
+    @CommandLine.Option(names = ["--includes-file"], description = ["Load includes from file"])
+    private var includesFile: File? = null
 
     /**
      * Pushes the whole translationResult to the neo4j db.
@@ -35,7 +58,6 @@ object Application {
      * neo4j db.
      * @throws ConnectException, if there is no connection to bolt://localhost:7687 possible
      */
-    @JvmStatic
     @Throws(InterruptedException::class, ConnectException::class)
     fun pushToNeo4j(translationResult: TranslationResult) {
         Objects.requireNonNull(translationResult)
@@ -68,7 +90,7 @@ object Application {
                 val configuration = Configuration.Builder()
                         .uri(URI)
                         .autoIndex(AUTO_INDEX)
-                        .credentials(NEO4J_USERNAME, NEO4J_PASSWORD)
+                        .credentials(neo4jUsername, neo4jPassword)
                         .verifyConnection(VERIFY_CONNECTION)
                         .build()
                 sessionFactory = SessionFactory(configuration, "de.fraunhofer.aisec.cpg.graph")
@@ -123,7 +145,6 @@ object Application {
     }
 
     /**
-     * @param args
      * @throws IllegalArgumentException, if there was no arguments provided, or the path does not
      * point to a file, is a directory or point to a hidden file or the paths does not have the
      * same top level path
@@ -132,13 +153,12 @@ object Application {
      * @throws ConnectException, if there is no connection to bolt://localhost:7687 possible
      */
     @Throws(Exception::class, ConnectException::class, IllegalArgumentException::class)
-    @JvmStatic
-    fun main(args: Array<String>) {
-        require(args.isNotEmpty()) { "A path is required." }
-        val files = arrayOfNulls<File>(args.size)
+    override fun call(): Int? {
+        val filePaths = arrayOfNulls<File>(files.size)
         var topLevel: File? = null
-        for (index in args.indices) {
-            val path = Paths.get(args[index]).toAbsolutePath().normalize()
+        
+        for (index in files.indices) {
+            val path = Paths.get(files[index]).toAbsolutePath().normalize()
             val file = File(path.toString())
             require(!(!file.exists() || file.isHidden)) { "Please use a correct path. It was: $path" }
             if (topLevel == null) {
@@ -146,7 +166,7 @@ object Application {
             } else {
                 require(topLevel.toString() == file.parentFile.toString()) { "All files should have the same top level path." }
             }
-            files[index] = file
+            filePaths[index] = file
         }
 
         if (START_DOCKER) {
@@ -155,16 +175,32 @@ object Application {
         }
 
         val translationConfiguration = TranslationConfiguration.builder()
-                .sourceLocations(*files)
+                .sourceLocations(*filePaths)
                 .topLevel(topLevel!!)
                 .defaultPasses()
+                .loadIncludes(loadIncludes)
                 .debugParser(true)
-                .build()
+        
 
-        val translationManager = TranslationManager.builder().config(translationConfiguration).build()
+        includesFile?.let {
+            println("Load includes form file: " + it)
+            val inputStream: InputStream = it.inputStream()
+            inputStream.bufferedReader().useLines { lines -> lines.forEach { 
+                translationConfiguration.includePath(Paths.get(topLevel.toString(), it).toString())
+            }}
+        }
+
+        val translationManager = TranslationManager.builder().config(translationConfiguration.build()).build()
 
         val translationResult = translationManager.analyze().get()
 
         pushToNeo4j(translationResult)
+
+        return 0
     }
+}
+
+fun main(args: Array<String>) {
+  val exitCode = CommandLine(Application()).execute(*args)
+  exitProcess(exitCode)
 }

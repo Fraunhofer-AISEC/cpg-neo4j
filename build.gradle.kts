@@ -13,7 +13,7 @@ plugins {
 }
 
 application {
-    mainClassName = "de.fraunhofer.aisec.cpg.ptn4j.Application"
+    mainClassName = "de.fraunhofer.aisec.cpg.ptn4j.ApplicationKt"
 }
 
 tasks.jacocoTestReport {
@@ -96,6 +96,10 @@ dependencies {
     // Docker
     testImplementation("com.github.docker-java","docker-java",versions["docker"])
     implementation(kotlin("stdlib-jdk8"))
+
+    // Command line interface support
+    api("info.picocli:picocli:4.1.4")
+    annotationProcessor("info.picocli:picocli-codegen:4.1.4")
 }
 
 val compileKotlin: KotlinCompile by tasks
