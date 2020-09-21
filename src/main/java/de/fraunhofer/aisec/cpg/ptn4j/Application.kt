@@ -180,13 +180,13 @@ class Application : Callable<Int> {
                 .defaultPasses()
                 .loadIncludes(loadIncludes)
                 .debugParser(true)
-        
 
         includesFile?.let {
             println("Load includes form file: " + it)
+            val baseDir = File(it.toString()).parentFile.toString()
             val inputStream: InputStream = it.inputStream()
             inputStream.bufferedReader().useLines { lines -> lines.forEach { 
-                translationConfiguration.includePath(Paths.get(topLevel.toString(), it).toString())
+                translationConfiguration.includePath(Paths.get(baseDir, it.strip()).toString())
             }}
         }
 
