@@ -5,6 +5,8 @@ import de.fraunhofer.aisec.cpg.TranslationManager
 import de.fraunhofer.aisec.cpg.TranslationResult
 import de.fraunhofer.aisec.cpg.graph.Node
 import de.fraunhofer.aisec.cpg.helpers.SubgraphWalker
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.neo4j.driver.exceptions.AuthenticationException
 import org.neo4j.ogm.config.Configuration
 import org.neo4j.ogm.exception.ConnectionException
@@ -28,6 +30,8 @@ private const val START_DOCKER = false
 private const val PURGE_DB = true
 
 class Application : Callable<Int> {
+    private val log: Logger
+    get() = LoggerFactory.getLogger(Application::class.java)
 
     @CommandLine.Parameters(
     arity = "1..*",
@@ -49,6 +53,9 @@ class Application : Callable<Int> {
 
     @CommandLine.Option(names = ["--includes-file"], description = ["Load includes from file"])
     private var includesFile: File? = null
+
+    @CommandLine.Option(names = ["--depth"], description = ["Performance optimisation: Limit recursion depth form neo4j OGM when leaving the AST. -1 means no limit is used."])
+    private var depth: Int = -1
 
     /**
      * Pushes the whole translationResult to the neo4j db.
@@ -126,9 +133,20 @@ class Application : Callable<Int> {
         // Only to remove duplicated elements in the translationUnitDeclarations
         // This "Bug" will be solved in future releases of the cpg
         val nodes: Set<Node> = HashSet<Node>(translationUnitDeclarations)
+        log.info("Using import depth: " + depth)
+        log.info("Count Translation units: " + nodes.size)
+        var count_tu = 0
         for (elem in nodes) {
-            for (child in SubgraphWalker.flattenAST(elem)) {
-                session.save(child)
+            count_tu++
+            val childs = SubgraphWalker.flattenAST(elem)
+            log.info("T%d Count AST Nodes: %d".format(count_tu, childs.size))
+            var count_nodes = 0
+            for (child in childs) {
+                if (count_nodes % 100 == 0) {
+                    log.info("T%d Progress: %.2f%%".format(count_tu, (count_nodes / (1.0*childs.size)) *100))
+                }
+                session.save(child, depth)
+                count_nodes++
             }
         }
     }
@@ -183,7 +201,7 @@ class Application : Callable<Int> {
         
 
         includesFile?.let {
-            println("Load includes form file: " + it)
+            log.info("Load includes form file: " + it)
             val inputStream: InputStream = it.inputStream()
             inputStream.bufferedReader().useLines { lines -> lines.forEach { 
                 translationConfiguration.includePath(Paths.get(topLevel.toString(), it).toString())
