@@ -183,10 +183,18 @@ class Application : Callable<Int> {
 
         includesFile?.let {
             println("Load includes form file: " + it)
-            val baseDir = File(it.toString()).parentFile.toString()
+            var baseDir = ""
+            File(it.toString()).parentFile?.let {
+                baseDir = it.toString()
+            }
             val inputStream: InputStream = it.inputStream()
             inputStream.bufferedReader().useLines { lines -> lines.forEach { 
-                translationConfiguration.includePath(Paths.get(baseDir, it.strip()).toString())
+                // TODO: 'strip(): String!' is deprecated. This member is not fully supported by Kotlin compiler, so it may be absent or have different signature in next major version
+                if (it[0] == '/'){
+                    translationConfiguration.includePath(it.strip())
+                } else {
+                    translationConfiguration.includePath(Paths.get(baseDir, it.strip()).toString())
+                }
             }}
         }
 
