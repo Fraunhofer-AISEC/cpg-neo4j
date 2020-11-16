@@ -16,7 +16,7 @@ import java.io.InputStream
 import java.net.ConnectException
 import java.nio.file.Paths
 import java.util.*
-import java.util.concurrent.Callable;
+import java.util.concurrent.Callable
 import kotlin.system.exitProcess
 
 private const val TIME_BETWEEN_CONNECTION_TRIES = 2000
@@ -24,7 +24,6 @@ private const val MAX_COUNT_OF_FAILS = 10
 private const val URI = "bolt://localhost"
 private const val AUTO_INDEX = "none"
 private const val VERIFY_CONNECTION = true
-private const val START_DOCKER = false
 private const val PURGE_DB = true
 
 class Application : Callable<Int> {
@@ -40,6 +39,9 @@ class Application : Callable<Int> {
 
     @CommandLine.Option(names = ["--password"], description = ["Neo4j password (default: ${DEFAULT-VALUE})"])
     private var neo4jPassword: String = "neo4j"
+
+    @CommandLine.Option(names = ["--save-depth"], description = ["Neo4j saveDepth"])
+    private var saveDepth: Int = -1
 
     @CommandLine.Option(
         names = ["--load-includes"],
@@ -64,10 +66,7 @@ class Application : Callable<Int> {
         val sessions = connect()
         val session = sessions.getT()
         if (PURGE_DB) session.purgeDatabase()
-        session.beginTransaction().use { transaction ->
-            pushNodes(translationResult, session)
-            transaction.commit()
-        }
+        pushNodes(translationResult, session)
         close(session, sessions.getU())
     }
 
@@ -127,9 +126,11 @@ class Application : Callable<Int> {
         // This "Bug" will be solved in future releases of the cpg
         val nodes: Set<Node> = HashSet<Node>(translationUnitDeclarations)
         for (elem in nodes) {
-            for (child in SubgraphWalker.flattenAST(elem)) {
-                session.save(child)
-            }
+            val transaction = session.beginTransaction()
+            session.save(SubgraphWalker.flattenAST(elem), saveDepth)
+            transaction.commit()
+            transaction.close()
+            session.clear()
         }
     }
 
@@ -153,25 +154,20 @@ class Application : Callable<Int> {
      * @throws ConnectException, if there is no connection to bolt://localhost:7687 possible
      */
     @Throws(Exception::class, ConnectException::class, IllegalArgumentException::class)
-    override fun call(): Int? {
+    override fun call(): Int {
         val filePaths = arrayOfNulls<File>(files.size)
         var topLevel: File? = null
         
         for (index in files.indices) {
             val path = Paths.get(files[index]).toAbsolutePath().normalize()
             val file = File(path.toString())
-            require(!(!file.exists() || file.isHidden)) { "Please use a correct path. It was: $path" }
+            require(file.exists() && (!file.isHidden)) { "Please use a correct path. It was: $path" }
             if (topLevel == null) {
                 topLevel = if (file.isDirectory) file else file.parentFile
             } else {
                 require(topLevel.toString() == file.parentFile.toString()) { "All files should have the same top level path." }
             }
             filePaths[index] = file
-        }
-
-        if (START_DOCKER) {
-            val utils = DockerUtils()
-            utils.startDocker()
         }
 
         val translationConfiguration = TranslationConfiguration.builder()
@@ -181,12 +177,12 @@ class Application : Callable<Int> {
                 .loadIncludes(loadIncludes)
                 .debugParser(true)
 
-        includesFile?.let {
-            println("Load includes form file: " + it)
+        includesFile?.let { it ->
+            println("Load includes form file: $it")
             val baseDir = File(it.toString()).parentFile.toString()
             val inputStream: InputStream = it.inputStream()
             inputStream.bufferedReader().useLines { lines -> lines.forEach { 
-                translationConfiguration.includePath(Paths.get(baseDir, it.strip()).toString())
+                translationConfiguration.includePath(Paths.get(baseDir, it.trim()).toString())
             }}
         }
 
