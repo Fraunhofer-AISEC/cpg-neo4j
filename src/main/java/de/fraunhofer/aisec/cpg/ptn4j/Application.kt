@@ -40,8 +40,8 @@ class Application : Callable<Int> {
     @CommandLine.Option(names = ["--password"], description = ["Neo4j password (default: ${DEFAULT-VALUE})"])
     private var neo4jPassword: String = "neo4j"
 
-    @CommandLine.Option(names = ["--save-depth"], description = ["Neo4j saveDepth"])
-    private var saveDepth: Int = -1
+    @CommandLine.Option(names = ["--save-depth"], description = ["Performance optimisation: Limit recursion depth form neo4j OGM when leaving the AST. -1 means no limit is used."])
+    private var depth: Int = -1
 
     @CommandLine.Option(
         names = ["--load-includes"],
@@ -127,7 +127,7 @@ class Application : Callable<Int> {
         val nodes: Set<Node> = HashSet<Node>(translationUnitDeclarations)
         for (elem in nodes) {
             val transaction = session.beginTransaction()
-            session.save(SubgraphWalker.flattenAST(elem), saveDepth)
+            session.save(SubgraphWalker.flattenAST(elem), depth)
             transaction.commit()
             transaction.close()
             session.clear()
