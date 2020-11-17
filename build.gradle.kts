@@ -9,16 +9,7 @@ plugins {
     id("org.sonarqube") version "2.8"
     id("com.diffplug.gradle.spotless") version "3.27.1"
     id("net.researchgate.release") version "2.6.0"
-    id("com.palantir.graal") version "0.7.1"
-
     kotlin("jvm") version "1.3.61"
-}
-
-graal {
-    javaVersion("11")
-    outputName("cpg-vis-neo4j")
-    graalVersion("20.1.0")
-    mainClass("de.fraunhofer.aisec.cpg.ptn4j.Application")
 }
 
 application {
@@ -43,7 +34,6 @@ val mavenCentralUri: String
     }
 
 repositories {
-    mavenLocal()
     mavenCentral()
 
     ivy {
@@ -93,8 +83,6 @@ dependencies {
     // CPG
     api("de.fraunhofer.aisec", "cpg", versions["cpg"])
 
-    implementation("org.eclipse.platform:org.eclipse.core.resources:3.13.700")
-
     // neo4j
     api("org.neo4j", "neo4j-ogm-core", versions["neo4j-ogm-old"])
     api("org.neo4j", "neo4j-ogm", versions["neo4j-ogm-old"])
@@ -116,10 +104,10 @@ dependencies {
 
 val compileKotlin: KotlinCompile by tasks
 compileKotlin.kotlinOptions {
-    jvmTarget = "11"
+    jvmTarget = "1.8"
 }
 
 val compileTestKotlin: KotlinCompile by tasks
 compileTestKotlin.kotlinOptions {
-    jvmTarget = "11"
+    jvmTarget = "1.8"
 }

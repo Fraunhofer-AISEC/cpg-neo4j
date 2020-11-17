@@ -11,14 +11,12 @@ The application requires Java 11 or higher.
 Build using Gradle
 
 ```
-./gradlew nativeImage
+./gradlew installDist
 ```
 
 ## Usage
 
-Start neo4j using `docker run -d --env NEO4J_AUTH=neo4j/password -p7474:7474 -p7687:7687 neo4j:3.5`
-
 ```
-./build/graal/cpg-vis-neo4j <pathToSourcecode> [<pathToSourcecode> ...]
+./build/install/cpg-vis-neo4j/bin/cpg-vis-neo4j <pathToSourcecode> [<pathToSourcecode> ...]
 ```
 You can provide a list of paths of arbitrary length that can contain both file paths and directory paths.
