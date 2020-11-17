@@ -18,7 +18,7 @@ graal {
     javaVersion("11")
     outputName("cpg-vis-neo4j")
     graalVersion("20.1.0")
-    mainClass("de.fraunhofer.aisec.cpg.ptn4j.Application")
+    mainClass("de.fraunhofer.aisec.cpg.ptn4j.ApplicationKt")
 }
 
 application {

@@ -226,9 +226,11 @@ class Application : Callable<Int> {
 
         return 0
     }
+
+
 }
 
 fun main(args: Array<String>) {
-  val exitCode = CommandLine(Application()).execute(*args)
-  exitProcess(exitCode)
+    val exitCode = CommandLine(Application()).execute(*args)
+    exitProcess(exitCode)
 }
