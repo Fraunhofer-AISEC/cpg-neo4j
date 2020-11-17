@@ -92,8 +92,6 @@ dependencies {
     // CPG
     api("de.fraunhofer.aisec", "cpg", versions["cpg"])
 
-    implementation("org.eclipse.platform:org.eclipse.core.resources:3.13.700")
-
     // neo4j
     api("org.neo4j", "neo4j-ogm-core", versions["neo4j-ogm-old"])
     api("org.neo4j", "neo4j-ogm", versions["neo4j-ogm-old"])
