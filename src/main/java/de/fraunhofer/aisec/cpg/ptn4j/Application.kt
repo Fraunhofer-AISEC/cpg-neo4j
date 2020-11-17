@@ -125,13 +125,20 @@ class Application : Callable<Int> {
         // Only to remove duplicated elements in the translationUnitDeclarations
         // This "Bug" will be solved in future releases of the cpg
         val nodes: Set<Node> = HashSet<Node>(translationUnitDeclarations)
-        for (elem in nodes) {
-            val transaction = session.beginTransaction()
-            session.save(SubgraphWalker.flattenAST(elem), depth)
-            transaction.commit()
-            transaction.close()
-            session.clear()
-        }
+
+        val nodesToPush = nodes.stream().collect(
+            {ArrayList<Node>()},
+            {list, elem -> list.addAll(SubgraphWalker.flattenAST(elem))},
+            {list1, list2 -> list1.addAll(list2)}
+        )
+
+        val transaction = session.beginTransaction()
+
+        session.save(nodesToPush, depth)
+
+        transaction.commit()
+        transaction.close()
+        session.clear()
     }
 
     /**
