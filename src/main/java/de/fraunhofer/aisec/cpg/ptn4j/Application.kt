@@ -115,13 +115,13 @@ class Application : Callable<Int> {
             } catch (ex: ConnectionException) {
                 sessionFactory = null
                 fails++
-                System.err.println(
+                log.error(
                         "Unable to connect to localhost:7687, "
                                 + "ensure the database is running and that "
                                 + "there is a working network connection to it.")
                 Thread.sleep(TIME_BETWEEN_CONNECTION_TRIES.toLong())
             } catch (ex: AuthenticationException) {
-                System.err.println("Unable to connect to localhost:7687, wrong username/password!")
+                log.error("Unable to connect to localhost:7687, wrong username/password!")
                 exitProcess(1)
             }
         }
