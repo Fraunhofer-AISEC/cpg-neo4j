@@ -14,13 +14,6 @@ plugins {
     kotlin("jvm") version "1.3.61"
 }
 
-graal {
-    javaVersion("11")
-    outputName("cpg-vis-neo4j")
-    graalVersion("20.1.0")
-    mainClass("de.fraunhofer.aisec.cpg.ptn4j.ApplicationKt")
-}
-
 application {
     mainClassName = "de.fraunhofer.aisec.cpg.ptn4j.ApplicationKt"
 }
@@ -43,7 +36,6 @@ val mavenCentralUri: String
     }
 
 repositories {
-    mavenLocal()
     mavenCentral()
 
     ivy {
