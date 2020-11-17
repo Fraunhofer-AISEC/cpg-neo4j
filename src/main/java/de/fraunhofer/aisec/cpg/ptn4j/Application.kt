@@ -21,6 +21,7 @@ import java.util.*
 import java.util.concurrent.Callable;
 import kotlin.system.exitProcess
 
+
 private const val TIME_BETWEEN_CONNECTION_TRIES = 2000
 private const val MAX_COUNT_OF_FAILS = 10
 private const val URI = "bolt://localhost"
