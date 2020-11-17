@@ -2,6 +2,10 @@
 
 A simple tool to export a *code property graph* to a neo4j database.
 
+## Requirements
+
+The application requires Java 11 or higher.
+
 ## Build
 
 Build using Gradle

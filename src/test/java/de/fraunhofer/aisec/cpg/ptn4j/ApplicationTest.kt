@@ -3,7 +3,7 @@ package de.fraunhofer.aisec.cpg.ptn4j
 import de.fraunhofer.aisec.cpg.TranslationConfiguration
 import de.fraunhofer.aisec.cpg.TranslationManager
 import de.fraunhofer.aisec.cpg.TranslationResult
-import de.fraunhofer.aisec.cpg.ptn4j.Application.pushToNeo4j
+import de.fraunhofer.aisec.cpg.ptn4j.Application
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Disabled
@@ -20,9 +20,10 @@ class ApplicationTest {
     fun pushToNeo4jWithoutConnectionBooms() {
         // arrange
         var connectionException: ConnectException? = null
+        var app = Application()
         // act
         try {
-            pushToNeo4j(translationResult!!)
+            app.pushToNeo4j(translationResult!!)
         } catch (ex: ConnectException) {
             connectionException = ex
         }
