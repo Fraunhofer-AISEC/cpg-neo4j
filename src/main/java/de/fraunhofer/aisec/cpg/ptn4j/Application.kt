@@ -5,6 +5,8 @@ import de.fraunhofer.aisec.cpg.TranslationManager
 import de.fraunhofer.aisec.cpg.TranslationResult
 import de.fraunhofer.aisec.cpg.graph.Node
 import de.fraunhofer.aisec.cpg.helpers.SubgraphWalker
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.neo4j.driver.exceptions.AuthenticationException
 import org.neo4j.ogm.config.Configuration
 import org.neo4j.ogm.exception.ConnectionException
@@ -27,6 +29,8 @@ private const val VERIFY_CONNECTION = true
 private const val PURGE_DB = true
 
 class Application : Callable<Int> {
+    private val log: Logger
+    get() = LoggerFactory.getLogger(Application::class.java)
 
     @CommandLine.Parameters(
     arity = "1..*",
@@ -126,6 +130,8 @@ class Application : Callable<Int> {
         // This "Bug" will be solved in future releases of the cpg
         val nodes: Set<Node> = HashSet<Node>(translationUnitDeclarations)
 
+        log.info("Using import depth: $depth")
+        log.info("Count Translation units: " + nodes.size)
         val nodesToPush = nodes.stream().collect(
             {ArrayList<Node>()},
             {list, elem -> list.addAll(SubgraphWalker.flattenAST(elem))},
@@ -185,11 +191,19 @@ class Application : Callable<Int> {
                 .debugParser(true)
 
         includesFile?.let { it ->
-            println("Load includes form file: $it")
-            val baseDir = File(it.toString()).parentFile.toString()
+            log.info("Load includes form file: $it")
+            var baseDir = ""
+            File(it.toString()).parentFile?.let { it ->
+                baseDir = it.toString()
+            }
             val inputStream: InputStream = it.inputStream()
             inputStream.bufferedReader().useLines { lines -> lines.forEach { 
-                translationConfiguration.includePath(Paths.get(baseDir, it.trim()).toString())
+                // TODO: 'strip(): String!' is deprecated. This member is not fully supported by Kotlin compiler, so it may be absent or have different signature in next major version
+                if (it[0] == '/'){
+                    translationConfiguration.includePath(it.trim())
+                } else {
+                    translationConfiguration.includePath(Paths.get(baseDir, it.trim()).toString())
+                }
             }}
         }
 

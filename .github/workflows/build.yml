@@ -5,14 +5,6 @@ on:
   - pull_request
 
 jobs:
-  # we need to at least execute one job otherwise the overall thing will fail, this is a known issue of GitHub actions
-  # see https://github.community/t5/GitHub-Actions/Workflow-is-failing-if-no-job-can-be-ran-due-to-condition/td-p/38085
-  noop:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Do nothing
-        run: |
-          echo 1
   build:
     runs-on: ubuntu-latest
     # only execute if this is coming from a push or from a PR from a forked repository
@@ -23,6 +15,12 @@ jobs:
       - uses: actions/setup-java@v1
         with:
           java-version: "11"
+      - name: Cache gradle
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/.gradle/caches
+          key: ${{ runner.os }}-${{ hashFiles('**/build.gradle.kts') }}
       - name: Build
         run: |
           if [ "$SONAR_TOKEN" != "" ]
@@ -33,7 +31,7 @@ jobs:
             -Dsonar.host.url=https://sonarcloud.io \
             -Dsonar.login=$SONAR_TOKEN
           else
-            ./gradlew --parallel spotlessCheck build
+            ./gradlew --parallel spotlessCheck nativeImage
           fi
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
