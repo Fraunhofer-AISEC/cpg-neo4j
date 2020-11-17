@@ -14,7 +14,6 @@ import org.neo4j.ogm.session.Session
 import org.neo4j.ogm.session.SessionFactory
 import picocli.CommandLine
 import java.io.File
-import java.io.InputStream
 import java.net.ConnectException
 import java.nio.file.Paths
 import java.util.*
@@ -33,18 +32,33 @@ class Application : Callable<Int> {
     get() = LoggerFactory.getLogger(Application::class.java)
 
     @CommandLine.Parameters(
-    arity = "1..*",
-    description = ["The paths to analyze. If module support is enabled, the paths will be looked at if they contain modules"]
+        arity = "1..*",
+        description = [
+            "The paths to analyze. If module support is enabled, the paths will be looked at if they contain modules"
+        ]
     )
     private var files = arrayOf(".")
 
-    @CommandLine.Option(names = ["--user"], description = ["Neo4j user name (default: ${DEFAULT-VALUE})"])
-    private var neo4jUsername: String = "neo4j"
+    @CommandLine.Option(
+        names = ["--user"],
+        description = ["Neo4j user name (default: neo4j)"]
+    )
+    private var neo4jUsername: String? = "neo4j"
 
-    @CommandLine.Option(names = ["--password"], description = ["Neo4j password (default: ${DEFAULT-VALUE})"])
-    private var neo4jPassword: String = "neo4j"
+    @CommandLine.Option(
+        names = ["--password"],
+        description = ["Neo4j password (default: password"])
 
-    @CommandLine.Option(names = ["--save-depth"], description = ["Performance optimisation: Limit recursion depth form neo4j OGM when leaving the AST. -1 means no limit is used."])
+    private var neo4jPassword: String? = "password"
+
+    @CommandLine.Option(
+        names = ["--save-depth"],
+        description = [
+            "Performance optimisation: " +
+                "Limit recursion depth form neo4j OGM when leaving the AST. " +
+                "-1 (default) means no limit is used."
+        ]
+    )
     private var depth: Int = -1
 
     @CommandLine.Option(
@@ -190,21 +204,18 @@ class Application : Callable<Int> {
                 .loadIncludes(loadIncludes)
                 .debugParser(true)
 
-        includesFile?.let { it ->
-            log.info("Load includes form file: $it")
-            var baseDir = ""
-            File(it.toString()).parentFile?.let { it ->
-                baseDir = it.toString()
-            }
-            val inputStream: InputStream = it.inputStream()
-            inputStream.bufferedReader().useLines { lines -> lines.forEach { 
-                // TODO: 'strip(): String!' is deprecated. This member is not fully supported by Kotlin compiler, so it may be absent or have different signature in next major version
-                if (it[0] == '/'){
-                    translationConfiguration.includePath(it.trim())
-                } else {
-                    translationConfiguration.includePath(Paths.get(baseDir, it.trim()).toString())
+        includesFile?.let { theFile ->
+            log.info("Load includes form file: $theFile")
+            val baseDir = File(theFile.toString()).parentFile?.toString() ?: ""
+            theFile.inputStream()
+                .bufferedReader()
+                .lines()
+                .map(String::trim)
+                .map {
+                    if (Paths.get(it).isAbsolute) it
+                    else Paths.get(baseDir, it).toString()
                 }
-            }}
+                .forEach { translationConfiguration.includePath(it) }
         }
 
         val translationManager = TranslationManager.builder().config(translationConfiguration.build()).build()
