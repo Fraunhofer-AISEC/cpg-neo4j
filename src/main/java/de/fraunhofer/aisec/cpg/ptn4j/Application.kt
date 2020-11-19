@@ -27,6 +27,7 @@ private const val URI = "bolt://localhost"
 private const val AUTO_INDEX = "none"
 private const val VERIFY_CONNECTION = true
 private const val PURGE_DB = true
+private const val DEBUG_PARSER = true
 
 class Application : Callable<Int> {
     private val log: Logger
@@ -209,7 +210,7 @@ class Application : Callable<Int> {
             .topLevel(topLevel!!)
             .defaultPasses()
             .loadIncludes(loadIncludes)
-            .debugParser(true)
+            .debugParser(DEBUG_PARSER)
 
         includesFile?.let { theFile ->
             log.info("Load includes form file: $theFile")
