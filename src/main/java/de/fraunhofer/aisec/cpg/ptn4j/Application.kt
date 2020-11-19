@@ -20,6 +20,7 @@ import java.util.*
 import java.util.concurrent.Callable
 import kotlin.system.exitProcess
 
+private const val S_TO_MS_FACTOR = 1000
 private const val TIME_BETWEEN_CONNECTION_TRIES = 2000
 private const val MAX_COUNT_OF_FAILS = 10
 private const val URI = "bolt://localhost"
@@ -147,14 +148,21 @@ class Application : Callable<Int> {
         log.info("Using import depth: $depth")
         log.info("Count Translation units: " + nodes.size)
         val nodesToPush = nodes.stream().collect(
-            {ArrayList<Node>()},
-            {list, elem -> list.addAll(SubgraphWalker.flattenAST(elem))},
-            {list1, list2 -> list1.addAll(list2)}
+            {HashSet<Node>()},
+            {set, elem -> set.addAll(SubgraphWalker.flattenAST(elem))},
+            {set1, set2 -> set1.addAll(set2)}
         )
+        log.info("Count nodes to save: " + nodesToPush.size)
 
         val transaction = session.beginTransaction()
 
+        val startTime = System.currentTimeMillis()
+
         session.save(nodesToPush, depth)
+
+        val purePushTime = System.currentTimeMillis()
+
+        log.info("Benchmark: pure push time: " + (purePushTime - startTime)/S_TO_MS_FACTOR + " s.")
 
         transaction.commit()
         transaction.close()
@@ -189,20 +197,19 @@ class Application : Callable<Int> {
             val path = Paths.get(files[index]).toAbsolutePath().normalize()
             val file = File(path.toString())
             require(file.exists() && (!file.isHidden)) { "Please use a correct path. It was: $path" }
-            if (topLevel == null) {
-                topLevel = if (file.isDirectory) file else file.parentFile
-            } else {
-                require(topLevel.toString() == file.parentFile.toString()) { "All files should have the same top level path." }
-            }
+            val currentTopLevel = if (file.isDirectory) file else file.parentFile
+            if (topLevel == null)
+                topLevel = currentTopLevel
+            require(topLevel.toString() == currentTopLevel.toString()) { "All files should have the same top level path." }
             filePaths[index] = file
         }
 
         val translationConfiguration = TranslationConfiguration.builder()
-                .sourceLocations(*filePaths)
-                .topLevel(topLevel!!)
-                .defaultPasses()
-                .loadIncludes(loadIncludes)
-                .debugParser(true)
+            .sourceLocations(*filePaths)
+            .topLevel(topLevel!!)
+            .defaultPasses()
+            .loadIncludes(loadIncludes)
+            .debugParser(true)
 
         includesFile?.let { theFile ->
             log.info("Load includes form file: $theFile")
@@ -218,11 +225,21 @@ class Application : Callable<Int> {
                 .forEach { translationConfiguration.includePath(it) }
         }
 
+        val startTime = System.currentTimeMillis()
+
         val translationManager = TranslationManager.builder().config(translationConfiguration.build()).build()
 
         val translationResult = translationManager.analyze().get()
 
+        val analyzingTime = System.currentTimeMillis()
+
+        log.info("Benchmark: analyzing code in " + (analyzingTime - startTime)/S_TO_MS_FACTOR + " s.")
+
         pushToNeo4j(translationResult)
+
+        val pushTime = System.currentTimeMillis()
+
+        log.info("Benchmark: push code in " + (pushTime - analyzingTime)/S_TO_MS_FACTOR + " s.")
 
         return 0
     }
