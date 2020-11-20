@@ -29,6 +29,13 @@ private const val VERIFY_CONNECTION = true
 private const val PURGE_DB = true
 private const val DEBUG_PARSER = true
 
+/**
+ * An application to export the <a href="https://github.com/Fraunhofer-AISEC/cpg">cpg</a> to
+ * a <a href="https://github.com/Fraunhofer-AISEC/cpg">neo4j</a> database.
+ *
+ * @author Andreas Hager, andreas.hager@aisec.fraunhofer.de
+ *
+ */
 class Application : Callable<Int> {
     private val log: Logger
     get() = LoggerFactory.getLogger(Application::class.java)
@@ -39,19 +46,19 @@ class Application : Callable<Int> {
             "The paths to analyze. If module support is enabled, the paths will be looked at if they contain modules"
         ]
     )
-    private var files = arrayOf(".")
+    private var files: Array<String> = arrayOf(".")
 
     @CommandLine.Option(
         names = ["--user"],
         description = ["Neo4j user name (default: neo4j)"]
     )
-    private var neo4jUsername: String? = "neo4j"
+    private var neo4jUsername: String = "neo4j"
 
     @CommandLine.Option(
         names = ["--password"],
         description = ["Neo4j password (default: password"])
 
-    private var neo4jPassword: String? = "password"
+    private var neo4jPassword: String = "password"
 
     @CommandLine.Option(
         names = ["--save-depth"],
@@ -157,7 +164,7 @@ class Application : Callable<Int> {
 
         val transaction = session.beginTransaction()
 
-        val startTime = System.currentTimeMillis()
+        startTime = System.currentTimeMillis()
 
         session.save(nodesToPush, depth)
 
@@ -182,18 +189,17 @@ class Application : Callable<Int> {
     }
 
     /**
+     * Parse the file paths to analyze and set up the translationConfiguration with these paths.
+     *
      * @throws IllegalArgumentException, if there was no arguments provided, or the path does not
      * point to a file, is a directory or point to a hidden file or the paths does not have the
-     * same top level path
-     * @throws InterruptedException, if the thread is interrupted while it try´s to connect to the
-     * neo4j db.
-     * @throws ConnectException, if there is no connection to bolt://localhost:7687 possible
+     * same top level path.
      */
-    @Throws(Exception::class, ConnectException::class, IllegalArgumentException::class)
-    override fun call(): Int {
+    private fun setupTranslationConfiguration(): TranslationConfiguration {
+        assert(files.isNotEmpty())
         val filePaths = arrayOfNulls<File>(files.size)
         var topLevel: File? = null
-        
+
         for (index in files.indices) {
             val path = Paths.get(files[index]).toAbsolutePath().normalize()
             val file = File(path.toString())
@@ -226,10 +232,26 @@ class Application : Callable<Int> {
                 .forEach { translationConfiguration.includePath(it) }
         }
 
+        return translationConfiguration.build()
+    }
+
+    /**
+     * The entrypoint of the cpg-vis-neo4j.
+     *
+     * @throws IllegalArgumentException, if there was no arguments provided, or the path does not
+     * point to a file, is a directory or point to a hidden file or the paths does not have the
+     * same top level path
+     * @throws InterruptedException, if the thread is interrupted while it try´s to connect to the
+     * neo4j db.
+     * @throws ConnectException, if there is no connection to bolt://localhost:7687 possible
+     */
+    @Throws(Exception::class, ConnectException::class, IllegalArgumentException::class)
+    override fun call(): Int {
+        val translationConfiguration = setupTranslationConfiguration()
+
         val startTime = System.currentTimeMillis()
 
-        val translationManager = TranslationManager.builder().config(translationConfiguration.build()).build()
-
+        val translationManager = TranslationManager.builder().config(translationConfiguration).build()
         val translationResult = translationManager.analyze().get()
 
         val analyzingTime = System.currentTimeMillis()
@@ -248,6 +270,16 @@ class Application : Callable<Int> {
 
 }
 
+/**
+ * Starts a command line application of the cpg-vis-neo4j.
+ *
+ * @throws IllegalArgumentException, if there was no arguments provided, or the path does not
+ * point to a file, is a directory or point to a hidden file or the paths does not have the
+ * same top level path
+ * @throws InterruptedException, if the thread is interrupted while it try´s to connect to the
+ * neo4j db.
+ * @throws ConnectException, if there is no connection to bolt://localhost:7687 possible
+ */
 fun main(args: Array<String>) {
     val exitCode = CommandLine(Application()).execute(*args)
     exitProcess(exitCode)
