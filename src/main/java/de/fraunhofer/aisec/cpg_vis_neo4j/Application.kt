@@ -172,11 +172,7 @@ class Application : Callable<Int> {
 
         val transaction = session.beginTransaction()
 
-        session.save(nodesToPush, depth)
-
-        val purePushTime = System.currentTimeMillis()
-
-        log.info("Benchmark: pure push time: " + (purePushTime - startTime)/S_TO_MS_FACTOR + " s.")
+        session.save(translationResult.translationUnits, depth)
 
         transaction.commit()
         transaction.close()
@@ -282,7 +278,6 @@ class Application : Callable<Int> {
 
 
 }
-
 
 /**
  * Starts a command line application of the cpg-vis-neo4j.
