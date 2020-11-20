@@ -3,15 +3,13 @@ package de.fraunhofer.aisec.cpg_vis_neo4j
 import de.fraunhofer.aisec.cpg.TranslationConfiguration
 import de.fraunhofer.aisec.cpg.TranslationManager
 import de.fraunhofer.aisec.cpg.TranslationResult
-import de.fraunhofer.aisec.cpg.graph.Node
-import de.fraunhofer.aisec.cpg.helpers.SubgraphWalker
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import org.neo4j.driver.exceptions.AuthenticationException
 import org.neo4j.ogm.config.Configuration
 import org.neo4j.ogm.exception.ConnectionException
 import org.neo4j.ogm.session.Session
 import org.neo4j.ogm.session.SessionFactory
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import picocli.CommandLine
 import java.io.File
 import java.net.ConnectException
@@ -45,7 +43,7 @@ private const val DEFAULT_SAVE_DEPTH = -1
  */
 class Application : Callable<Int> {
     private val log: Logger
-    get() = LoggerFactory.getLogger(Application::class.java)
+        get() = LoggerFactory.getLogger(Application::class.java)
 
     @CommandLine.Parameters(
         arity = "1..*",
@@ -122,30 +120,30 @@ class Application : Callable<Int> {
         while (session == null && fails < MAX_COUNT_OF_FAILS) {
             try {
                 val configuration = Configuration.Builder()
-                        .uri("$PROTOCOL$host:$port")
-                        .autoIndex(AUTO_INDEX)
-                        .credentials(neo4jUsername, neo4jPassword)
-                        .verifyConnection(VERIFY_CONNECTION)
-                        .build()
+                    .uri("$PROTOCOL$host:$port")
+                    .autoIndex(AUTO_INDEX)
+                    .credentials(neo4jUsername, neo4jPassword)
+                    .verifyConnection(VERIFY_CONNECTION)
+                    .build()
                 sessionFactory = SessionFactory(configuration, "de.fraunhofer.aisec.cpg.graph")
                 session = sessionFactory.openSession()
             } catch (ex: ConnectionException) {
                 sessionFactory = null
                 fails++
                 log.error(
-                        "Unable to connect to localhost:7687, "
-                                + "ensure the database is running and that "
-                                + "there is a working network connection to it.")
-                Thread.sleep(TIME_BETWEEN_CONNECTION_TRIES.toLong())
+                    "Unable to connect to localhost:7687, "
+                        + "ensure the database is running and that "
+                        + "there is a working network connection to it.")
+                Thread.sleep(TIME_BETWEEN_CONNECTION_TRIES)
             } catch (ex: AuthenticationException) {
                 log.error("Unable to connect to localhost:7687, wrong username/password!")
                 exitProcess(1)
             }
         }
         assert(fails <= MAX_COUNT_OF_FAILS)
-        if (session == null || sessionFactory == null) {
+        if (session == null || sessionFactory == null)
             throw ConnectException("Unable to connect to localhost:7687")
-        }
+
         return Pair(session, sessionFactory)
     }
 
@@ -156,19 +154,8 @@ class Application : Callable<Int> {
      * @param session, not null,
      */
     private fun pushNodes(translationResult: TranslationResult, session: Session) {
-        val translationUnitDeclarations = translationResult.translationUnits
-        // Only to remove duplicated elements in the translationUnitDeclarations
-        // This "Bug" will be solved in future releases of the cpg
-        val nodes: Set<Node> = HashSet<Node>(translationUnitDeclarations)
-
         log.info("Using import depth: $depth")
-        log.info("Count Translation units: " + nodes.size)
-        val nodesToPush = nodes.stream().collect(
-            {HashSet<Node>()},
-            {set, elem -> set.addAll(SubgraphWalker.flattenAST(elem))},
-            {set1, set2 -> set1.addAll(set2)}
-        )
-        log.info("Count nodes to save: " + nodesToPush.size)
+        log.info("Count base nodes to save: " + translationResult.translationUnits.size)
 
         val transaction = session.beginTransaction()
 
@@ -264,19 +251,15 @@ class Application : Callable<Int> {
         val translationResult = translationManager.analyze().get()
 
         val analyzingTime = System.currentTimeMillis()
-
-        log.info("Benchmark: analyzing code in " + (analyzingTime - startTime)/S_TO_MS_FACTOR + " s.")
+        log.info("Benchmark: analyzing code in " + (analyzingTime - startTime) / S_TO_MS_FACTOR + " s.")
 
         pushToNeo4j(translationResult)
 
         val pushTime = System.currentTimeMillis()
-
-        log.info("Benchmark: push code in " + (pushTime - analyzingTime)/S_TO_MS_FACTOR + " s.")
+        log.info("Benchmark: push code in " + (pushTime - analyzingTime) / S_TO_MS_FACTOR + " s.")
 
         return 0
     }
-
-
 }
 
 /**
