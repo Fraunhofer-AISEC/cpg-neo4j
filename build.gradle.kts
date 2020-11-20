@@ -9,8 +9,6 @@ plugins {
     id("org.sonarqube") version "2.8"
     id("com.diffplug.gradle.spotless") version "3.27.1"
     id("net.researchgate.release") version "2.6.0"
-    id("com.palantir.graal") version "0.7.1"
-
     kotlin("jvm") version "1.3.61"
 }
 

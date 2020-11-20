@@ -21,13 +21,20 @@ import java.util.concurrent.Callable
 import kotlin.system.exitProcess
 
 private const val S_TO_MS_FACTOR = 1000
-private const val TIME_BETWEEN_CONNECTION_TRIES = 2000
+private const val TIME_BETWEEN_CONNECTION_TRIES: Long = 2000
 private const val MAX_COUNT_OF_FAILS = 10
-private const val URI = "bolt://localhost"
-private const val AUTO_INDEX = "none"
 private const val VERIFY_CONNECTION = true
 private const val PURGE_DB = true
 private const val DEBUG_PARSER = true
+private const val AUTO_INDEX = "none"
+private const val PROTOCOL = "bolt://"
+
+private const val DEFAULT_HOST = "localhost"
+private const val DEFAULT_PORT = 7687
+private const val DEFAULT_USER_NAME = "neo4j"
+private const val DEFAULT_PASSWORD = "password"
+private const val DEFAULT_SAVE_DEPTH = -1
+
 
 /**
  * An application to export the <a href="https://github.com/Fraunhofer-AISEC/cpg">cpg</a> to
@@ -43,40 +50,41 @@ class Application : Callable<Int> {
     @CommandLine.Parameters(
         arity = "1..*",
         description = [
-            "The paths to analyze. If module support is enabled, the paths will be looked at if they contain modules"
-        ]
-    )
+            "The paths to analyze. If module support is enabled, the paths will be looked at if they contain modules"])
     private var files: Array<String> = arrayOf(".")
 
     @CommandLine.Option(
         names = ["--user"],
-        description = ["Neo4j user name (default: neo4j)"]
+        description = ["Neo4j user name (default: $DEFAULT_USER_NAME)"]
     )
-    private var neo4jUsername: String = "neo4j"
+    private var neo4jUsername: String = DEFAULT_USER_NAME
 
     @CommandLine.Option(
         names = ["--password"],
-        description = ["Neo4j password (default: password"])
+        description = ["Neo4j password (default: $DEFAULT_PASSWORD"])
+    private var neo4jPassword: String = DEFAULT_PASSWORD
 
-    private var neo4jPassword: String = "password"
+    @CommandLine.Option(
+        names = ["--host"],
+        description = ["Set the host of the neo4j Database (default: $DEFAULT_HOST)."])
+    private var host: String = DEFAULT_HOST
+
+    @CommandLine.Option(
+        names = ["--port"],
+        description = ["Set the port of the neo4j Database (default: $DEFAULT_PORT)."])
+    private var port: Int = DEFAULT_PORT
 
     @CommandLine.Option(
         names = ["--save-depth"],
         description = [
             "Performance optimisation: " +
                 "Limit recursion depth form neo4j OGM when leaving the AST. " +
-                "-1 (default) means no limit is used."
-        ]
-    )
-    private var depth: Int = -1
+                "$DEFAULT_SAVE_DEPTH (default) means no limit is used."])
+    private var depth: Int = DEFAULT_SAVE_DEPTH
 
     @CommandLine.Option(
-        names = ["--load-includes"],
-        description = ["Enable TranslationConfiguration option loadIncludes"]
-    )
-    private var loadIncludes: Boolean = false
-
-    @CommandLine.Option(names = ["--includes-file"], description = ["Load includes from file"])
+        names = ["--includes-file"],
+        description = ["Load includes from file"])
     private var includesFile: File? = null
 
     /**
@@ -114,7 +122,7 @@ class Application : Callable<Int> {
         while (session == null && fails < MAX_COUNT_OF_FAILS) {
             try {
                 val configuration = Configuration.Builder()
-                        .uri(URI)
+                        .uri("$PROTOCOL$host:$port")
                         .autoIndex(AUTO_INDEX)
                         .credentials(neo4jUsername, neo4jPassword)
                         .verifyConnection(VERIFY_CONNECTION)
@@ -163,8 +171,6 @@ class Application : Callable<Int> {
         log.info("Count nodes to save: " + nodesToPush.size)
 
         val transaction = session.beginTransaction()
-
-        startTime = System.currentTimeMillis()
 
         session.save(nodesToPush, depth)
 
@@ -215,7 +221,7 @@ class Application : Callable<Int> {
             .sourceLocations(*filePaths)
             .topLevel(topLevel!!)
             .defaultPasses()
-            .loadIncludes(loadIncludes)
+            .loadIncludes(includesFile != null)
             .debugParser(DEBUG_PARSER)
 
         includesFile?.let { theFile ->

@@ -17,21 +17,25 @@ Build using Gradle
 ## Usage
 
 ```
-./build/install/cpg-vis-neo4j/bin/cpg-vis-neo4j [--load-includes] [--includes-file=<includesFile>]
-                                                                    [--password=<neo4jPassword>] [--save-depth=<depth>]
-                                                                    [--user=<neo4jUsername>] <files>...
-          <files>...             The paths to analyze. If module support is
-                                   enabled, the paths will be looked at if they
-                                   contain modules
-          --includes-file=<includesFile>
-                                 Load includes from file
-          --load-includes        Enable TranslationConfiguration option loadIncludes
-          --password=<neo4jPassword>
-                                 Neo4j password (default: password
-          --save-depth=<depth>   Performance optimisation: Limit recursion depth
-                                   form neo4j OGM when leaving the AST. -1
-                                   (default) means no limit is used.
-          --user=<neo4jUsername> Neo4j user name (default: neo4j)
+./build/install/cpg-vis-neo4j/bin/cpg-vis-neo4j [--host=<host>] [--port=<port>]
+                                                [--user=<neo4jUsername>] [--password=<neo4jPassword>]
+                                                [--includes-file=<includesFile>] [--save-depth=<depth>] 
+                                                <files>...
+
+      <files>...             The paths to analyze. If module support is
+                               enabled, the paths will be looked at if they
+                               contain modules
+      --host=<host>          Set the host of the neo4j Database (default:
+                               localhost).
+      --includes-file=<includesFile>
+                             Load includes from file
+      --password=<neo4jPassword>
+                             Neo4j password (default: password
+      --port=<port>          Set the port of the neo4j Database (default: 7687).
+      --save-depth=<depth>   Performance optimisation: Limit recursion depth
+                               form neo4j OGM when leaving the AST. -1
+                               (default) means no limit is used.
+      --user=<neo4jUsername> Neo4j user name (default: neo4j)
 ```
 You can provide a list of paths of arbitrary length that can contain both file paths and directory paths.
 

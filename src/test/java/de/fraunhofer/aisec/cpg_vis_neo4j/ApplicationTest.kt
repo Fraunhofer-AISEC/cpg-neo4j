@@ -16,7 +16,7 @@ import java.util.concurrent.ExecutionException
 class ApplicationTest {
 
     @Test
-    @Disabled
+    @Throws(InterruptedException::class)
     fun pushToNeo4jWithoutConnectionBooms() {
         // arrange // act // assert
         Assertions.assertThrows(ConnectException::class.java) { Application().pushToNeo4j(translationResult!!) }
