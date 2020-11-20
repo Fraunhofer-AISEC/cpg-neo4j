@@ -1,4 +1,4 @@
-package de.fraunhofer.aisec.cpg.ptn4j
+package de.fraunhofer.aisec.cpg_vis_neo4j
 
 import de.fraunhofer.aisec.cpg.TranslationConfiguration
 import de.fraunhofer.aisec.cpg.TranslationManager
@@ -91,10 +91,10 @@ class Application : Callable<Int> {
     fun pushToNeo4j(translationResult: TranslationResult) {
         Objects.requireNonNull(translationResult)
         val sessions = connect()
-        val session = sessions.getT()
+        val session = sessions.first
         if (PURGE_DB) session.purgeDatabase()
         pushNodes(translationResult, session)
-        close(session, sessions.getU())
+        close(session, sessions.second)
     }
 
     /**
@@ -236,6 +236,13 @@ class Application : Callable<Int> {
     }
 
     /**
+     * A generic pair.
+     *
+     * @author Andreas Hager, andreas.hager@aisec.fraunhofer.de
+     */
+    private class Pair<T, U>(val first: T, val second: U)
+
+    /**
      * The entrypoint of the cpg-vis-neo4j.
      *
      * @throws IllegalArgumentException, if there was no arguments provided, or the path does not
@@ -269,6 +276,7 @@ class Application : Callable<Int> {
 
 
 }
+
 
 /**
  * Starts a command line application of the cpg-vis-neo4j.

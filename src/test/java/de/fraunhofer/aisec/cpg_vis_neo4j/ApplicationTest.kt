@@ -1,4 +1,4 @@
-package de.fraunhofer.aisec.cpg.ptn4j
+package de.fraunhofer.aisec.cpg_vis_neo4j
 
 import de.fraunhofer.aisec.cpg.TranslationConfiguration
 import de.fraunhofer.aisec.cpg.TranslationManager
@@ -14,21 +14,12 @@ import java.util.concurrent.ExecutionException
 
 @Disabled
 class ApplicationTest {
+
     @Test
-    @Throws(InterruptedException::class)
+    @Disabled
     fun pushToNeo4jWithoutConnectionBooms() {
-        // arrange
-        var connectionException: ConnectException? = null
-        val app = Application()
-        // act
-        try {
-            app.pushToNeo4j(translationResult!!)
-        } catch (ex: ConnectException) {
-            connectionException = ex
-        }
-        // assert
-        Assertions.assertNotNull(connectionException)
-        Assertions.assertEquals(connectionException!!.message, "Unable to connect to localhost:7687")
+        // arrange // act // assert
+        Assertions.assertThrows(ConnectException::class.java) { Application().pushToNeo4j(translationResult!!) }
     }
 
     companion object {
