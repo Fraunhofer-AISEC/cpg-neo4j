@@ -45,4 +45,4 @@ You can provide a list of paths of arbitrary length that can contain both file p
         a <code>java.lang.StackOverflowError</code> may occur.
     - This error could be solved by increasing the stack size with the JavaVM option: <code>-Xss4m</code>
 
-- While pushing a constant value larger tan 2^63 - 1 a  java.lang.IllegalArgumentException occurs.
+- While pushing a constant value larger tan 2^63 - 1 a <code>java.lang.IllegalArgumentException</code> occurs.

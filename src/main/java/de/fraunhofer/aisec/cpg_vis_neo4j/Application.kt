@@ -14,13 +14,14 @@ import picocli.CommandLine
 import java.io.File
 import java.net.ConnectException
 import java.nio.file.Paths
-import java.util.*
 import java.util.concurrent.Callable
 import kotlin.system.exitProcess
 
 private const val S_TO_MS_FACTOR = 1000
 private const val TIME_BETWEEN_CONNECTION_TRIES: Long = 2000
 private const val MAX_COUNT_OF_FAILS = 10
+private const val EXIT_SUCCESS = 0
+private const val EXIT_FAILURE = 1
 private const val VERIFY_CONNECTION = true
 private const val PURGE_DB = true
 private const val DEBUG_PARSER = true
@@ -95,12 +96,20 @@ class Application : Callable<Int> {
      */
     @Throws(InterruptedException::class, ConnectException::class)
     fun pushToNeo4j(translationResult: TranslationResult) {
-        Objects.requireNonNull(translationResult)
+        log.info("Using import depth: $depth")
+        log.info("Count base nodes to save: " + translationResult.translationUnits.size)
+
         val sessions = connect()
         val session = sessions.first
+        val transaction = session.beginTransaction()
+
         if (PURGE_DB) session.purgeDatabase()
-        pushNodes(translationResult, session)
-        close(session, sessions.second)
+        session.save(translationResult.translationUnits, depth)
+
+        transaction.commit()
+        transaction.close()
+        session.clear()
+        sessions.second.close()
     }
 
     /**
@@ -137,44 +146,15 @@ class Application : Callable<Int> {
                 Thread.sleep(TIME_BETWEEN_CONNECTION_TRIES)
             } catch (ex: AuthenticationException) {
                 log.error("Unable to connect to localhost:7687, wrong username/password!")
-                exitProcess(1)
+                exitProcess(EXIT_FAILURE)
             }
         }
+        if (session == null || sessionFactory == null) {
+            log.error("Unable to connect to localhost:7687")
+            exitProcess(EXIT_FAILURE)
+        }
         assert(fails <= MAX_COUNT_OF_FAILS)
-        if (session == null || sessionFactory == null)
-            throw ConnectException("Unable to connect to localhost:7687")
-
         return Pair(session, sessionFactory)
-    }
-
-    /**
-     * PushNodes to the neo4j db.
-     *
-     * @param translationResult, not null,
-     * @param session, not null,
-     */
-    private fun pushNodes(translationResult: TranslationResult, session: Session) {
-        log.info("Using import depth: $depth")
-        log.info("Count base nodes to save: " + translationResult.translationUnits.size)
-
-        val transaction = session.beginTransaction()
-
-        session.save(translationResult.translationUnits, depth)
-
-        transaction.commit()
-        transaction.close()
-        session.clear()
-    }
-
-    /**
-     * Clears the session and closes the sessionFactory
-     *
-     * @param session, not null
-     * @param sessionFactory, not null
-     */
-    private fun close(session: Session, sessionFactory: SessionFactory) {
-        session.clear()
-        sessionFactory.close()
     }
 
     /**
@@ -247,8 +227,12 @@ class Application : Callable<Int> {
 
         val startTime = System.currentTimeMillis()
 
-        val translationManager = TranslationManager.builder().config(translationConfiguration).build()
-        val translationResult = translationManager.analyze().get()
+        val translationResult = TranslationManager
+            .builder()
+            .config(translationConfiguration)
+            .build()
+            .analyze()
+            .get()
 
         val analyzingTime = System.currentTimeMillis()
         log.info("Benchmark: analyzing code in " + (analyzingTime - startTime) / S_TO_MS_FACTOR + " s.")
@@ -258,7 +242,7 @@ class Application : Callable<Int> {
         val pushTime = System.currentTimeMillis()
         log.info("Benchmark: push code in " + (pushTime - analyzingTime) / S_TO_MS_FACTOR + " s.")
 
-        return 0
+        return EXIT_SUCCESS
     }
 }
 
