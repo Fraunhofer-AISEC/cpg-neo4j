@@ -99,17 +99,17 @@ class Application : Callable<Int> {
         log.info("Using import depth: $depth")
         log.info("Count base nodes to save: " + translationResult.translationUnits.size)
 
-        val sessions = connect()
-        val session = sessions.first
-        val transaction = session.beginTransaction()
+        val sessionAndSessionFactoryPair = connect()
 
-        if (PURGE_DB) session.purgeDatabase()
-        session.save(translationResult.translationUnits, depth)
+        val session = sessionAndSessionFactoryPair.first
+        session.beginTransaction().use { transaction ->
+            if (PURGE_DB) session.purgeDatabase()
+            session.save(translationResult.translationUnits, depth)
+            transaction.commit()
+        }
 
-        transaction.commit()
-        transaction.close()
         session.clear()
-        sessions.second.close()
+        sessionAndSessionFactoryPair.second.close()
     }
 
     /**
