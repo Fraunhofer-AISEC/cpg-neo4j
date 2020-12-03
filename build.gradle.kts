@@ -75,8 +75,7 @@ val versions = mapOf(
         "neo4j-ogm" to "4.0.0",
         "neo4j-ogm-old" to "3.2.8",
         "junit5" to "5.6.0",
-        "cpg" to "2.2.1",
-        "docker" to "3.0.14"
+        "cpg" to "3.2.0"
 )
 
 dependencies {
@@ -93,8 +92,6 @@ dependencies {
     testImplementation("org.junit.jupiter", "junit-jupiter-params", versions["junit5"])
     testRuntimeOnly("org.junit.jupiter", "junit-jupiter-engine", versions["junit5"])
 
-    // Docker
-    testImplementation("com.github.docker-java","docker-java",versions["docker"])
     implementation(kotlin("stdlib-jdk8"))
 
     // Command line interface support
@@ -104,10 +101,10 @@ dependencies {
 
 val compileKotlin: KotlinCompile by tasks
 compileKotlin.kotlinOptions {
-    jvmTarget = "1.8"
+    jvmTarget = "11"
 }
 
 val compileTestKotlin: KotlinCompile by tasks
 compileTestKotlin.kotlinOptions {
-    jvmTarget = "1.8"
+    jvmTarget = "11"
 }
