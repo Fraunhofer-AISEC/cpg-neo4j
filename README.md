@@ -27,6 +27,7 @@ Build using Gradle
                                contain modules
       --host=<host>          Set the host of the neo4j Database (default:
                                localhost).
+      --load-includes        Enable TranslationConfiguration option loadIncludes
       --includes-file=<includesFile>
                              Load includes from file
       --password=<neo4jPassword>
