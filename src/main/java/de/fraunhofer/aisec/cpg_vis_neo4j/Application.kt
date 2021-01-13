@@ -82,6 +82,12 @@ class Application : Callable<Int> {
     private var depth: Int = DEFAULT_SAVE_DEPTH
 
     @CommandLine.Option(
+        names = ["--load-includes"],
+        description = ["Enable TranslationConfiguration option loadIncludes"]
+    )
+    private var loadIncludes: Boolean = false
+
+    @CommandLine.Option(
         names = ["--includes-file"],
         description = ["Load includes from file"])
     private var includesFile: File? = null
@@ -184,7 +190,7 @@ class Application : Callable<Int> {
             .sourceLocations(*filePaths)
             .topLevel(topLevel!!)
             .defaultPasses()
-            .loadIncludes(includesFile != null)
+            .loadIncludes(loadIncludes)
             .debugParser(DEBUG_PARSER)
 
         includesFile?.let { theFile ->
