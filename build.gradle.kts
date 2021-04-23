@@ -37,7 +37,7 @@ repositories {
     mavenCentral()
 
     ivy {
-        setUrl("https://download.eclipse.org/tools/cdt/releases/9.11/cdt-9.11.1/plugins")
+        setUrl("https://download.eclipse.org/tools/cdt/releases/10.2/cdt-10.2.0/plugins")
         metadataSources {
             artifact()
         }
@@ -75,7 +75,7 @@ val versions = mapOf(
         "neo4j-ogm" to "4.0.0",
         "neo4j-ogm-old" to "3.2.8",
         "junit5" to "5.6.0",
-        "cpg" to "3.2.0"
+        "cpg" to "3.5.1"
 )
 
 dependencies {
