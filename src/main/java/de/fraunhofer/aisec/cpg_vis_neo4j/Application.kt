@@ -190,6 +190,7 @@ class Application : Callable<Int> {
             .sourceLocations(*filePaths)
             .topLevel(topLevel!!)
             .defaultPasses()
+            .defaultLanguages()
             .loadIncludes(loadIncludes)
             .debugParser(DEBUG_PARSER)
 
