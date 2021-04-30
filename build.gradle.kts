@@ -35,6 +35,7 @@ val mavenCentralUri: String
 
 repositories {
     mavenCentral()
+    maven { setUrl("https://jitpack.io") }
 
     ivy {
         setUrl("https://download.eclipse.org/tools/cdt/releases/10.2/cdt-10.2.0/plugins")
@@ -73,14 +74,18 @@ java {
 
 val versions = mapOf(
         "neo4j-ogm" to "4.0.0",
-        "neo4j-ogm-old" to "3.2.8",
+        "neo4j-ogm-old" to "3.2.22",
         "junit5" to "5.6.0",
         "cpg" to "3.5.1"
 )
 
 dependencies {
     // CPG
-    api("de.fraunhofer.aisec", "cpg", versions["cpg"])
+    //api("de.fraunhofer.aisec", "cpg", versions["cpg"])
+    //implementation("com.github.Fraunhofer-AISEC:cpg:0e10b90eb2") {
+    implementation("com.github.Fraunhofer-AISEC:cpg:-SNAPSHOT") {
+        isChanging = true
+    }
 
     // neo4j
     api("org.neo4j", "neo4j-ogm-core", versions["neo4j-ogm-old"])
@@ -91,6 +96,8 @@ dependencies {
     testImplementation("org.junit.jupiter", "junit-jupiter-api", versions["junit5"])
     testImplementation("org.junit.jupiter", "junit-jupiter-params", versions["junit5"])
     testRuntimeOnly("org.junit.jupiter", "junit-jupiter-engine", versions["junit5"])
+
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.12.+")
 
     implementation(kotlin("stdlib-jdk8"))
 
