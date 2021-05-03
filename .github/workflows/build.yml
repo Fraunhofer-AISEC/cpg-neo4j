@@ -23,6 +23,9 @@ jobs:
       - uses: actions/setup-java@v1
         with:
           java-version: "11"
+      - name: Setup neo4j
+        run: |
+          docker run -d --env NEO4J_AUTH=neo4j/password -p7474:7474 -p7687:7687 neo4j
       - name: Build
         run: |
           if [ "$SONAR_TOKEN" != "" ]

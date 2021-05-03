@@ -128,7 +128,7 @@ class Application : Callable<Int> {
      * @throws ConnectException, if there is no connection to bolt://localhost:7687 possible
      */
     @Throws(InterruptedException::class, ConnectException::class)
-    private fun connect(): Pair<Session, SessionFactory> {
+    fun connect(): Pair<Session, SessionFactory> {
         var fails = 0
         var sessionFactory: SessionFactory? = null
         var session: Session? = null
@@ -216,7 +216,7 @@ class Application : Callable<Int> {
      *
      * @author Andreas Hager, andreas.hager@aisec.fraunhofer.de
      */
-    private class Pair<T, U>(val first: T, val second: U)
+    class Pair<T, U>(val first: T, val second: U)
 
     /**
      * The entrypoint of the cpg-vis-neo4j.

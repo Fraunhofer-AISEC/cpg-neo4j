@@ -9,7 +9,7 @@ plugins {
     id("org.sonarqube") version "2.8"
     id("com.diffplug.gradle.spotless") version "3.27.1"
     id("net.researchgate.release") version "2.6.0"
-    kotlin("jvm") version "1.3.61"
+    kotlin("jvm") version "1.4.32"
 }
 
 application {
@@ -92,14 +92,14 @@ dependencies {
     api("org.neo4j", "neo4j-ogm", versions["neo4j-ogm-old"])
     api("org.neo4j", "neo4j-ogm-bolt-driver", versions["neo4j-ogm-old"])
 
+    implementation(kotlin("test-junit"))
+
     // JUnit
     testImplementation("org.junit.jupiter", "junit-jupiter-api", versions["junit5"])
     testImplementation("org.junit.jupiter", "junit-jupiter-params", versions["junit5"])
     testRuntimeOnly("org.junit.jupiter", "junit-jupiter-engine", versions["junit5"])
 
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.12.+")
-
-    implementation(kotlin("stdlib-jdk8"))
 
     // Command line interface support
     api("info.picocli:picocli:4.1.4")
@@ -114,4 +114,8 @@ compileKotlin.kotlinOptions {
 val compileTestKotlin: KotlinCompile by tasks
 compileTestKotlin.kotlinOptions {
     jvmTarget = "11"
+}
+
+tasks.withType<Test> {
+    useJUnitPlatform()
 }
