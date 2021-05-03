@@ -30,7 +30,7 @@ class ApplicationTest {
             val functions = session.loadAll(FunctionDeclaration::class.java)
             assertNotNull(functions)
 
-            assertEquals(2, functions.size)
+            assertEquals(38, functions.size)
 
             transaction.commit()
         }
@@ -47,7 +47,7 @@ class ApplicationTest {
         @Throws(ExecutionException::class, InterruptedException::class)
         private fun init() {
             val topLevel = Paths.get("src").resolve("test").resolve("resources").toAbsolutePath()
-            val path = topLevel.resolve("Implementor1.java").toAbsolutePath()
+            val path = topLevel.resolve("client.cpp").toAbsolutePath()
             val file = File(path.toString())
             assert(file.exists() && !file.isDirectory && !file.isHidden)
             val translationConfiguration = TranslationConfiguration.builder()

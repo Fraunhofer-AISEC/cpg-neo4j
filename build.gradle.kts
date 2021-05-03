@@ -83,7 +83,7 @@ dependencies {
     // CPG
     //api("de.fraunhofer.aisec", "cpg", versions["cpg"])
     //implementation("com.github.Fraunhofer-AISEC:cpg:0e10b90eb2") {
-    implementation("com.github.Fraunhofer-AISEC:cpg:-SNAPSHOT") {
+    implementation("com.github.Fraunhofer-AISEC:cpg:8bc36f49") {
         isChanging = true
     }
 
